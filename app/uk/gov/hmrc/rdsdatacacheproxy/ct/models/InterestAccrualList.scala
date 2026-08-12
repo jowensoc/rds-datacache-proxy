@@ -19,10 +19,10 @@ package uk.gov.hmrc.rdsdatacacheproxy.ct.models
 import play.api.libs.json.{Json, OFormat}
 import java.time.LocalDate
 
-case class InterestAccrualList(interestAccrualList: List[InterestAccrual])
+case class InterestAccruals(interestAccruals: List[InterestAccrual])
 
-object InterestAccrualList {
-  implicit val format: OFormat[InterestAccrualList] = Json.format[InterestAccrualList]
+object InterestAccruals {
+  implicit val format: OFormat[InterestAccruals] = Json.format[InterestAccruals]
 }
 
 case class InterestAccrual(

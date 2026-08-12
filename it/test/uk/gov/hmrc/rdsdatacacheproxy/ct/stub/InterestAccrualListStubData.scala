@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.rdsdatacacheproxy.ct.stub
 
-import uk.gov.hmrc.rdsdatacacheproxy.ct.models.InterestAccrual
+import uk.gov.hmrc.rdsdatacacheproxy.ct.models.{InterestAccrual, InterestAccruals}
 
 import java.time.LocalDate
 
@@ -56,8 +56,8 @@ object InterestAccrualListStubData {
 
   def getAccrualInterestListItems(taxRef: Long, accPeriod: Long, interestType: String): List[InterestAccrual] = {
     taxRef match {
-      case 1L  => interestAccrualListSingleItem
-      case 2L  => interestAccrualListMultipleItems
+      case 1L => interestAccrualListSingleItem
+      case 2L => interestAccrualListMultipleItems
       case 99L => throw new Error("Simulated downstream failure")
       case _ => interestAccrualListEmpty
     }
