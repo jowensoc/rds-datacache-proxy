@@ -14,15 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.rdsdatacacheproxy.ct.models
+package uk.gov.hmrc.rdsdatacacheproxy.shared.utils
 
-import play.api.libs.json.{Json, OFormat}
+sealed trait RepositoryError { def msg: String }
 
-case class PayRepayReallocations(
-  totalAmountRepRfrRto: Option[BigDecimal],
-  totalAmountPayments: Option[BigDecimal]
-)
+case class RecordNotFound(msg: String) extends Throwable(msg) with RepositoryError
 
-object PayRepayReallocations {
-  implicit val format: OFormat[PayRepayReallocations] = Json.format[PayRepayReallocations]
-}
+case class DatabaseError(msg: String, cause: Throwable) extends Throwable(msg, cause) with RepositoryError

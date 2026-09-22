@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.rdsdatacacheproxy.ct.models
+package uk.gov.hmrc.rdsdatacacheproxy.cis.models
 
-import play.api.libs.json.{Json, OFormat}
+import play.api.libs.json.*
 
-case class PayRepayReallocations(
-  totalAmountRepRfrRto: Option[BigDecimal],
-  totalAmountPayments: Option[BigDecimal]
+final case class EnqueueTracking(
+  message: EnqueueMessage,
+  number: EnqueueNumber
 )
 
-object PayRepayReallocations {
-  implicit val format: OFormat[PayRepayReallocations] = Json.format[PayRepayReallocations]
+object EnqueueTracking {
+  given OFormat[EnqueueTracking] = Json.format[EnqueueTracking]
 }

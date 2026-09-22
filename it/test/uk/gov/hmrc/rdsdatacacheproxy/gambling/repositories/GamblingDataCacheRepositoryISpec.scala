@@ -24,6 +24,7 @@ import play.api.Application
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import uk.gov.hmrc.rdsdatacacheproxy.gambling.models.*
+import uk.gov.hmrc.rdsdatacacheproxy.shared.utils.RepositoryError
 
 import java.time.LocalDate
 import scala.concurrent.Future
@@ -71,12 +72,11 @@ class GamblingDataCacheRepositoryISpec extends AnyWordSpec with Matchers with Sc
     override def getPartnerDetails(regime: Regime, regNumber: String): Future[PartnerDetails] =
       Future.successful(GamblingStubData.getPartnerDetailsData(regNumber))
 
-    override def getPremisesDetails(
-                                     mgdRegNumber: String,
-                                     rowsPerPage: Int,
-                                     PageNo: Int
-                                        ): Future[PremisesDetailsResponse] =
-      Future.successful(GamblingStubData.getPremisesDetails(mgdRegNumber, 0, 0))
+    override def getReturnPeriods(regNumber: String): Future[Either[RepositoryError, ReturnPeriods]] =
+      Future.successful(GamblingStubData.getReturnPeriods(regNumber))
+
+    override def getPremisesDetails(mgdRegNumber: String): Future[PremisesDetailsResponse] =
+      Future.successful(GamblingStubData.getPremisesDetails(mgdRegNumber))
   }
 
   override lazy val app: Application = new GuiceApplicationBuilder()
@@ -419,6 +419,7 @@ class GamblingDataCacheRepositoryISpec extends AnyWordSpec with Matchers with Sc
       result.returnsOverdue must be >= 0
     }
   }
+  
   "getBusinessName (stubbed repository)" should {
 
     "return John Doe as Sole Proprietor" in {
@@ -824,14 +825,44 @@ class GamblingDataCacheRepositoryISpec extends AnyWordSpec with Matchers with Sc
       exception.getMessage must include("Simulated downstream failure")
     }
   }
+  
+  "getReturnPeriods (stubbed repository)" should {
 
+    "return correct PartnerDetailsData" in {
+      val result = repository.getReturnPeriods("XYM00000000000").futureValue
+
+      result mustBe GamblingStubData.getReturnPeriods("XYM00000000000")
+    }
+
+    "return consistent results across multiple calls" in {
+      val result1 = repository.getReturnPeriods("XYM00000000000").futureValue
+      val result2 = repository.getReturnPeriods("XYM00000000000").futureValue
+
+      result1 mustBe result2
+    }
+
+    "handle different valid regNumbers independently" in {
+      val result1 = repository.getReturnPeriods("XYM00000000000").futureValue
+      val result2 = repository.getReturnPeriods("XYZ00000000001").futureValue
+
+      result1 must not be result2
+    }
+
+    "propagate downstream failure from stub" in {
+      val exception = intercept[RuntimeException] {
+        repository.getReturnPeriods("XEM33333333333").futureValue
+      }
+
+      exception.getMessage must include("Simulated downstream failure")
+    }
+  }
 
   "getPremisesDetails (stubbed repository)" should {
 
     "return premises details for valid mgdRegNumber" in {
 
       val result =
-        repository.getPremisesDetails("XYZ00000000001", 0, 0).futureValue
+        repository.getPremisesDetails("XYZ00000000001").futureValue
 
       result mustBe PremisesDetailsResponse(
         totalRows = Some(1000),
@@ -862,7 +893,7 @@ class GamblingDataCacheRepositoryISpec extends AnyWordSpec with Matchers with Sc
 
       val exception = intercept[RuntimeException] {
         repository
-          .getPremisesDetails("ERR00000000000", 0, 0)
+          .getPremisesDetails("ERR00000000000")
           .futureValue
       }
 
@@ -872,7 +903,7 @@ class GamblingDataCacheRepositoryISpec extends AnyWordSpec with Matchers with Sc
     "return empty optional fields when no data exists" in {
 
       val result =
-        repository.getPremisesDetails("UNKNOWN", 0, 0).futureValue
+        repository.getPremisesDetails("UNKNOWN").futureValue
 
       result mustBe PremisesDetailsResponse(
         totalRows = Some(0),

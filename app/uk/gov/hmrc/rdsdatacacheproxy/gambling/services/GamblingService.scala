@@ -19,14 +19,15 @@ package uk.gov.hmrc.rdsdatacacheproxy.gambling.services
 import play.api.Logging
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.rdsdatacacheproxy.gambling.models.*
-import uk.gov.hmrc.rdsdatacacheproxy.gambling.models.errors.{GamblingError, StatementError}
 import uk.gov.hmrc.rdsdatacacheproxy.gambling.models.errors.GamblingError.*
+import uk.gov.hmrc.rdsdatacacheproxy.gambling.models.errors.{GamblingError, StatementError}
 import uk.gov.hmrc.rdsdatacacheproxy.gambling.repositories.GamblingDataSource
-import uk.gov.hmrc.rdsdatacacheproxy.shared.utils.GRNValidator
+import uk.gov.hmrc.rdsdatacacheproxy.shared.utils.*
 import uk.gov.hmrc.rdsdatacacheproxy.shared.utils.GRNValidator.regNumberPatternGTR
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.util.control.NonFatal
 
 class GamblingService @Inject() (
   repository: GamblingDataSource
@@ -321,9 +322,7 @@ class GamblingService @Inject() (
   }
 
   def getPremisesDetails(
-    rawMgdRegNumber: String,
-    rowsPerPage: Int,
-    PageNo: Int
+    rawMgdRegNumber: String
   )(implicit hc: HeaderCarrier): Future[Either[GamblingError, PremisesDetailsResponse]] = {
 
     val mgdRegNumber = rawMgdRegNumber.trim.toUpperCase
@@ -339,7 +338,7 @@ class GamblingService @Inject() (
     } else {
 
       repository
-        .getPremisesDetails(mgdRegNumber, rowsPerPage, PageNo)
+        .getPremisesDetails(mgdRegNumber)
         .map(details => Right(details))
         .recover { case ex: Exception =>
           logger.error(
@@ -349,5 +348,41 @@ class GamblingService @Inject() (
           Left(UnexpectedError)
         }
     }
+  }
+
+  def getReturnPeriods(regNumber: String)(implicit hc: HeaderCarrier): Future[Either[GamblingError, ReturnPeriods]] = {
+
+    val mgdRegNumber = regNumber.trim.toUpperCase
+
+    GRNValidator.validateRegNum(Regime.MGD, mgdRegNumber) match {
+      case Left(value) =>
+        logger.warn(s"[GamblingService][getReturnPeriods] Invalid pattern mgdRegNumber=$mgdRegNumber")
+        Future.successful(Left(GamblingError.InvalidMgdRegNumber))
+
+      case Right(value) => {
+        repository
+          .getReturnPeriods(mgdRegNumber)
+          .map {
+            case Right(periods) => Right(periods)
+
+            case Left(RecordNotFound(msg)) =>
+              logger.warn(s"[GamblingService][getReturnPeriods] No Return Period details found for MGD registration number $mgdRegNumber: $msg")
+              Left(GamblingError.RecordNotFoundError)
+
+            case Left(DatabaseError(msg, cause)) =>
+              logger.error(
+                s"[GamblingService][getReturnPeriods] Failed while retrieving Return Period details for MGD registration number $mgdRegNumber: $msg",
+                cause
+              )
+              Left(GamblingError.DBSystemError)
+          }
+          .recover { case NonFatal(ex) =>
+            logger.error(s"[GamblingService][getReturnPeriods] Unexpected error for MGD registration number $mgdRegNumber", ex)
+            Left(GamblingError.UnexpectedError)
+          }
+      }
+
+    }
+
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2026 HM Revenue & Customs
+ * Copyright 2025 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,15 +14,16 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.rdsdatacacheproxy.ct.models
+package uk.gov.hmrc.rdsdatacacheproxy.cis.services
 
-import play.api.libs.json.{Json, OFormat}
+import uk.gov.hmrc.rdsdatacacheproxy.cis.models.EnqueueMessageRequest
+import uk.gov.hmrc.rdsdatacacheproxy.cis.repositories.CisMonthlyReturnSource
 
-case class PayRepayReallocations(
-  totalAmountRepRfrRto: Option[BigDecimal],
-  totalAmountPayments: Option[BigDecimal]
-)
+import javax.inject.Inject
+import scala.concurrent.Future
 
-object PayRepayReallocations {
-  implicit val format: OFormat[PayRepayReallocations] = Json.format[PayRepayReallocations]
+class UdasQueueService @Inject() (cisSource: CisMonthlyReturnSource) {
+
+  def enqueueMessage(request: EnqueueMessageRequest): Future[Long] =
+    cisSource.enqueueMessage(request)
 }
