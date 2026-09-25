@@ -44,4 +44,5 @@ class PaymentsController @Inject() (authorise: AuthAction, service: PaymentsServ
           InternalServerError("Failed to retrieve payment transactions")
         }
     }
+
 }
