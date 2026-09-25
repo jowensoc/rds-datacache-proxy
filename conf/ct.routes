@@ -21,4 +21,4 @@ GET        /display-needed/:taxRef/:accPeriod                               uk.g
 GET        /is-company-nominator/:gpaUtr/:nominatedCompanyUtr               uk.gov.hmrc.rdsdatacacheproxy.ct.controllers.gpa.CompanyNominatorController.getIsCompanyNominatorOfGPA(gpaUtr: Long, nominatedCompanyUtr: Long)
 GET        /group-summary/:gpaUTR/:nomCompanyUTR                            uk.gov.hmrc.rdsdatacacheproxy.ct.controllers.GroupPaymentsController.getGroupSummary(gpaUTR: Long, nomCompanyUTR: Long)
 
-GET        /group-payment-periods-in-range/:gpaUTR/:nominatedCompanyUTR/:pPeriod/:pMonthRestriction                              uk.gov.hmrc.rdsdatacacheproxy.ct.controllers.GroupPaymentPeriodsInRangeController.getGroupPaymentPeriodsInRange(gpaUTR: Long, nominatedCompanyUTR: Long, pPeriod: Long, pMonthRestriction: Long)
+GET        /group-payment-periods-in-range/:gpaUTR/:nominatedCompanyUTR/:pPeriod/:pMonthRestriction                              uk.gov.hmrc.rdsdatacacheproxy.ct.controllers.gpa.GroupPaymentPeriodsInRangeController.getGroupPaymentPeriodsInRange(gpaUTR: Long, nominatedCompanyUTR: Long, pPeriod: Long, pMonthRestriction: Long)
